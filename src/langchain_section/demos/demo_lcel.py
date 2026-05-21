@@ -92,10 +92,29 @@ def demo_batch() -> None:
     print()
 
 
+def demo_steaming() -> None:
+    """Método streaming"""
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "Explica conceptos técnicos de forma clara."),
+        ("human", "Explica que es {concepto} en 2 párrafos.")
+    ])
+
+    chain = prompt | llm | StrOutputParser()
+
+    print("STREAMING EN TIEMPO REAL.")
+    print("IA: ", end="", flush=True)
+
+    for chunk in chain.stream({"concepto": "La ventana de contexto en LLMs"}):
+        print(chunk, end="", flush=True)
+
+    print("\n")
+
+
 if __name__ == "__main__":
     print("="*60)
     print("LangChain LCEL - Fundamentos")
     # demo_simple_chain()
     # demo_steps_inspection()
-    demo_batch()
+    # demo_batch()
+    demo_steaming()
     print("="*60)
