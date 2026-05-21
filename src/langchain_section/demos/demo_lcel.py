@@ -67,9 +67,35 @@ def demo_steps_inspection() -> None:
     print()
 
 
+def demo_batch() -> None:
+    """Batch method"""
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "Clasifica el sentimiento. Responde SOLO: POSITIVO, NEGATIVO o NEUTRO"),
+        ("human", "{texto}")
+    ])
+
+    chain = prompt | llm | StrOutputParser()
+
+    inputs = [
+        {"texto": "Me encanta este framework, es increíble."},
+        {"texto": "El servidor estuvo caído 3 horas!! es inaceptable"},
+        {"texto": "La versión 2.0 ya está disponible"},
+        {"texto": "Perdí todos mis datos por un bug crítico."},
+        {"texto": "La documentación es bastante clara."},
+    ]
+
+    results = chain.batch(inputs)
+
+    print("BATCH PROCESSING:")
+    for input_message, result in zip(inputs, results):
+        print(f" [{result}] {input_message['texto'][:50]}...")
+    print()
+
+
 if __name__ == "__main__":
     print("="*60)
     print("LangChain LCEL - Fundamentos")
     # demo_simple_chain()
-    demo_steps_inspection()
+    # demo_steps_inspection()
+    demo_batch()
     print("="*60)
