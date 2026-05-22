@@ -1,11 +1,12 @@
 """Demo LCEL"""
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from src.langchain_section.core.llm import get_llm
-from src.langchain_section.config.settings import settings
+# from src.langchain_section.config.settings import settings
 
 
-llm = get_llm()
+llm = get_llm(0.1)
 
 
 # código aquí
@@ -110,11 +111,50 @@ def demo_steaming() -> None:
     print("\n")
 
 
+def demo_passthrough() -> None:
+    """Passthrough"""
+    # Simula retriever
+    def search_context(question: str) -> str:
+        contexts = {
+            "python": "Python fue creado por Guido Van Rossum en 1991.",
+            "langchain": "LangChain es un framework para aplicaciones con LLMs.",
+            "devtalles": "Una plataforma muy cool con instructores guapos.",
+        }
+
+        for keyword, ctx in contexts.items():
+            if keyword.lower() in question.lower():
+                return ctx
+        return "No se encontro contexto relevante."
+
+    retriever = RunnableLambda(search_context)
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "Responde usando este contexto: \n{context}"),
+        ("human", "{question}")
+    ])
+
+    chain = (
+        {
+            "context": retriever,
+            "question": RunnablePassthrough()
+        }
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
+
+    response = chain.invoke("¿Qué es Devtalles?")
+    print("PASSTHROUGH DEMO: ")
+    print(response)
+    print()
+
+
 if __name__ == "__main__":
     print("="*60)
     print("LangChain LCEL - Fundamentos")
     # demo_simple_chain()
     # demo_steps_inspection()
     # demo_batch()
-    demo_steaming()
+    # demo_steaming()
+    demo_passthrough()
     print("="*60)
