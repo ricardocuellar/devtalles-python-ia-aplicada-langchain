@@ -1,9 +1,5 @@
 
-from turtle import back
-
 from langchain_core.runnables import RunnableWithMessageHistory
-from langsmith import expect
-
 from src.langchain_section.chains.base import build_assistant_chain
 from src.langchain_section.memory.base import BaseMemoryBackend
 
@@ -30,6 +26,7 @@ def run_chat_session(
     backend: BaseMemoryBackend,
     session_id: str
 ) -> None:
+    """Sesión de chat interactiva"""
     print(f"\nSesión activa: {session_id}")
 
     messages = backend.get_history(session_id).messages
