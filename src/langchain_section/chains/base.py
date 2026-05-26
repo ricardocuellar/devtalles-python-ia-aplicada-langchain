@@ -15,7 +15,7 @@ Tienes acceso al historial completo de esta conversación.
 Si el usuario hace referencia a algo anterior, recuérdalo."""
 
     prompt = ChatPromptTemplate.from_messages([
-        ("sytem", system_prompt or default_system),
+        ("system", system_prompt or default_system),
         MessagesPlaceholder(variable_name="history"),
         ("human", "{input}")
     ])
