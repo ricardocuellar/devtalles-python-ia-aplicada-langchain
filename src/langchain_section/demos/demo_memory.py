@@ -1,5 +1,7 @@
 
 from langchain_core.runnables import RunnableWithMessageHistory
+from src.langchain_section.memory.postgresql_memory import PostgreSQLMemoryBackend
+from src.langchain_section.memory.sqlite_memory import SQLiteMemoryBackend
 from src.langchain_section.chains.base import build_assistant_chain
 from src.langchain_section.memory.base import BaseMemoryBackend
 
@@ -85,3 +87,30 @@ def run_chat_session(
             break
         except Exception as e:
             print(f"Error: {e}\n")
+
+
+if __name__ == "__main__":
+    print("="*60)
+    print("Memoria persistente con SQLite y PostgreSQL")
+    print("="*60)
+
+    print("\n¿Qué backend memory usar?")
+    print(" 1.SQLite (archivo local)")
+    print(" 2.PostgreSQL (requiere Docker ejecutandose)")
+
+    choice = input("Elige(1/2): ").strip()
+
+    if choice == "2":
+        try:
+            backend = PostgreSQLMemoryBackend()
+            print("✅ Conectado a PostgreSQL")
+        except ValueError as e:
+            print(f"❌ {e}")
+            print("Usando SQLite como respaldo...")
+            backend = SQLiteMemoryBackend()
+    else:
+        backend = SQLiteMemoryBackend()
+        print("✅ Conectado a SQLite")
+
+    chatbot = build_chatbot(backend)
+    run_chat_session(chatbot, backend, session_id="user_demo_001")
