@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from langchain_section.chains.rag import build_rag_chain
+from src.langchain_section.chains.rag import build_rag_chain
 from src.langchain_section.core.embeddings import get_or_create_vectorstore
 from src.langchain_section.core.document_loader import load_directory, split_documents
 
@@ -33,7 +33,7 @@ def index_documents() -> tuple:
     current_count = vectorstore._collection.count()
 
     if current_count > 0:
-        print("\n. Ya hay {current_count} chunks indexados")
+        print(f"\n. Ya hay {current_count} chunks indexados")
         answer = input("¿Reindexar desde cero? (s/N): ").strip().lower()
 
         if answer == "s":
@@ -166,6 +166,24 @@ def main() -> None:
                     rag_chain, retriever = build_rag_chain(vectorstore)
                     print(f"Listo. {num_chunks} chunks disponibles.\n")
                 continue
+
+            retrieved_docs = retriever.invoke(user_input)
+
+            if not retrieved_docs:
+                print("\n IA: No encontré información relevante en los documentos.\n")
+                continue
+
+            print("\n IA: ", end="", flush=True)
+            answer = rag_chain.invoke(user_input)
+            print(answer)
+
+            show_used_sources(retrieved_docs)
+            print()
+        except KeyboardInterrupt:
+            print("\n¡Hasta luego!\n")
+            break
+        except Exception as e:
+            print(f"\n ❌ Error: {e}\n")
 
 
 if __name__ == "__main__":
