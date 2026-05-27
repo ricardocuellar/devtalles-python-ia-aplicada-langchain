@@ -3,6 +3,9 @@ from pathlib import Path
 
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_core.documents import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+from src.langchain_section.config.settings import settings
 
 
 SUPPORTED_EXTENSIONS = {".txt", ".pdf"}
@@ -84,3 +87,26 @@ def load_directory(directory_path: Path) -> list[Document]:
             f"\n ✅{len(all_files)} archivo(s) cargados -> {len(all_docs)} sección/es totales")
 
     return all_docs
+
+
+def split_documents(
+    docs: list[Document],
+    chunk_size: int = None,
+    chunk_overlap: int = None,
+) -> list[Document]:
+    """Divide los documentos en chunks para indexación"""
+
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size or settings.CHUNK_SIZE,
+        chunk_overlap=chunk_overlap or settings.CHUNK_OVERLAP,
+        separators=["\n\n", "\n", ". ", " ", ""],
+        add_start_index=True
+    )
+
+    chunks = splitter.split_documents(docs)
+
+    print(f"{len(docs)} sección/es -> {len(chunks)} chunks"
+          f"(tamaño: ~{chunk_size or settings.CHUNK_SIZE} chars, "
+          f"Overlap: {chunk_overlap or settings.CHUNK_OVERLAP})")
+
+    return chunks
