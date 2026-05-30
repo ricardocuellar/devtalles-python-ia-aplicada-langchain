@@ -1,10 +1,12 @@
 
 import json
 
-from click import prompt
-from langchain.messages import HumanMessage
 
-from langchain_section.core.llm import get_llm
+from langchain.messages import HumanMessage
+from langchain_chroma import Chroma
+
+from src.langchain_section.config.settings import settings
+from src.langchain_section.core.llm import get_llm
 from src.langchain_section.graphs.states import RAGAgentState
 
 
@@ -58,3 +60,33 @@ En caso de duda: needs_retrieval = true"""
     print(f"[analyze] needs_retrieval={needs_retrieval} | {reason}")
 
     return {"needs_retrieval": needs_retrieval}
+
+
+def node_retrieve(state: RAGAgentState, vectorstore: Chroma) -> dict:
+    """Busca los chunks más relevantes en ChromaDB"""
+    print(f" [retrieve] Buscando: '{state['question'][:60]}...'")
+
+    docs = vectorstore.as_retriever(
+        search_type="similarity",
+        search_kwargs={"k": settings.TOP_K_RESULTS}
+    ).invoke(state["question"])
+
+    retrieved_texts = [doc.page_content for doc in docs]
+
+    sources = [
+        {
+            "file": doc.metadata.get("file_name", "desconocida"),
+            "page": doc.metadata.get("page", "N/A"),
+        }
+        for doc in docs
+    ]
+
+    print(f" [retrieve] {len(docs)} chunks encontrados")
+
+    for src in sources:
+        print(f" -> {src['file']} (pág. {src['page']})")
+
+    return {
+        "retrieved_docs": retrieved_texts,
+        "sources": sources
+    }
