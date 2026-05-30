@@ -1,6 +1,7 @@
 
 import json
 import stat
+from typing import Literal
 
 
 from langchain.messages import AIMessage, HumanMessage
@@ -142,3 +143,10 @@ INSTRUCCIONES:
         "response": result.content,
         "messages": [AIMessage(content=result.content)]
     }
+
+
+def decide_retrieval_path(state: RAGAgentState) -> Literal["retrieve", "generate"]:
+    """Función de decisión"""
+    if state.get("need_retrieval", True):
+        return "retrieve"
+    return "generate"
