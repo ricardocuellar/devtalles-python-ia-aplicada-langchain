@@ -5,7 +5,10 @@ from pathlib import Path
 import uuid
 
 from langchain.messages import HumanMessage
+from langchain_core import vectorstores
+from requests import session
 
+from langchain_section.graphs.rag_agent import build_rag_agent
 from langchain_section.graphs.states import RAGAgentState
 from src.langchain_section.memory.base import BaseMemoryBackend
 from src.langchain_section.memory.postgresql_memory import PostgreSQLMemoryBackend
@@ -238,3 +241,26 @@ def run_chat(
 
         except Exception as e:
             print(f"\nError: {e}\n")
+
+
+def main() -> None:
+    print("="*50)
+    print("Asistente de conocimientos empresarial")
+    print("="*50)
+
+    vectorstore = setup_vectorstore()
+    if vectorstore is None:
+        return
+
+    backend = setup_memory_backend()
+
+    agent = build_rag_agent(vectorstore)
+    print("Grafo LangGraph compilado")
+
+    session_id = select_session(backend)
+
+    run_chat(agent, backend, session_id)
+
+
+if __name__ == "__main__":
+    main()
