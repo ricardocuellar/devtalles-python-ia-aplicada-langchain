@@ -1,10 +1,12 @@
 
+from curses.ascii import isdigit
 from pathlib import Path
-from shutil import ExecError
 
-from langchain_section.memory.base import BaseMemoryBackend
-from langchain_section.memory.postgresql_memory import PostgreSQLMemoryBackend
-from langchain_section.memory.sqlite_memory import SQLiteMemoryBackend
+import uuid
+
+from src.langchain_section.memory.base import BaseMemoryBackend
+from src.langchain_section.memory.postgresql_memory import PostgreSQLMemoryBackend
+from src.langchain_section.memory.sqlite_memory import SQLiteMemoryBackend
 from src.langchain_section.core.document_loader import load_directory, split_documents
 from src.langchain_section.core.embeddings import get_or_create_vectorstore
 
@@ -51,3 +53,64 @@ def setup_memory_backend() -> BaseMemoryBackend:
         print(f"❌ PostgreSQL no disponible {e}")
         print(" Usando SQLite como fallback de desarrollo")
         return SQLiteMemoryBackend()
+
+
+def select_session(backend: BaseMemoryBackend) -> str:
+    """Seleccionar sesión o crear una nueva"""
+    exists_sessions = backend.list_sessions()
+
+    print("\n")
+    print("=" * 55)
+    print("Gestión de sesiones")
+    print("=" * 55)
+
+    if exists_sessions:
+        print(f"\nConversaciones guardadas ({len(exists_sessions)}): ")
+        for index, session_id in enumerate(exists_sessions, 1):
+            messages = backend.get_history(session_id).messages
+            last_message = ""
+            if messages:
+                last_message = f" - último: '{messages[-1].content[:40]}...'"
+            print(f" {index}. {session_id}{last_message}")
+
+        print("\nOpciones:")
+        print("  n -> Nueva conversación")
+        print("  1,2,3... -> Retomar conversación existente")
+        print("  ID -> Escribir un session_id específico")
+
+        choise = input("\nElige: ").strip().lower()
+
+        if choise == "n":
+            session_id = str(uuid.uuid4())
+            print(f"\nNueva sesión: {session_id}")
+            return session_id
+
+        if choise.isdigit():
+            idx = int(choise) - 1
+            if 0 <= idx < len(exists_sessions):
+                session_id = exists_sessions[idx]
+                messages = backend.get_history(session_id).messages
+                print(f"\n Retomando sesión: {session_id}")
+                print(f" {len(messages)} mensajes previos")
+                return session_id
+            else:
+                print("Número inválido. Creando nueva sesión")
+
+        if choise and choise != "n":
+            session_id = choise
+            messages = backend.get_history(session_id).messages
+            if messages:
+                print(f"\n Retomando sesión: {session_id}")
+                print(f" {len(messages)} mensajes previos")
+            else:
+                print(f"\n Nueva sesión con ID: {session_id}")
+            return session_id
+
+        session_id = str(uuid.uuid4())
+        print(f"\nNueva sesión: {session_id}")
+        return session_id
+
+    else:
+        session_id = str(uuid.uuid4())
+        print(f"\nPrimera sesión: {session_id}")
+        return session_id
