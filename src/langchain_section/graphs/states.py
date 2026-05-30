@@ -4,7 +4,7 @@ from typing import Annotated, TypedDict
 from langgraph.graph import add_messages
 
 
-class RAGAgentSate(TypedDict):
+class RAGAgentState(TypedDict):
     """Estados"""
     messages: Annotated[list, add_messages]
     question: str
