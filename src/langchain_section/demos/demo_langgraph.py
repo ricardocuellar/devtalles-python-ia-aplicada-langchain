@@ -4,6 +4,9 @@ from pathlib import Path
 
 import uuid
 
+from langchain.messages import HumanMessage
+
+from langchain_section.graphs.states import RAGAgentState
 from src.langchain_section.memory.base import BaseMemoryBackend
 from src.langchain_section.memory.postgresql_memory import PostgreSQLMemoryBackend
 from src.langchain_section.memory.sqlite_memory import SQLiteMemoryBackend
@@ -188,3 +191,18 @@ def run_chat(
                 history = []
                 print("Historial de esta sesión borrada. \n")
                 continue
+
+            history = load_history(backend, session_id)
+
+            initial_state: RAGAgentState = {
+                "messages": history + [HumanMessage(content=user_input)],
+                "question": user_input,
+                "retrieved_docs": [],
+                "response": "",
+                "need_retrieval": True,
+                "sources": [],
+            }
+
+            print()
+
+            final_state = agent.invoke(initial_state)
