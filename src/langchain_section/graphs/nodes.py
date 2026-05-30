@@ -1,8 +1,9 @@
 
 import json
+import stat
 
 
-from langchain.messages import HumanMessage
+from langchain.messages import AIMessage, HumanMessage
 from langchain_chroma import Chroma
 
 from src.langchain_section.config.settings import settings
@@ -89,4 +90,55 @@ def node_retrieve(state: RAGAgentState, vectorstore: Chroma) -> dict:
     return {
         "retrieved_docs": retrieved_texts,
         "sources": sources
+    }
+
+
+def node_generate(state: RAGAgentState) -> dict:
+    """Genera la respuesta"""
+    llm = get_llm(temperature=settings.LOW_TEMPERATURE)
+
+    if state.get("retrieved_docs"):
+        docs_text = "\n\n --- \n\n".join(state["retrieved_docs"])
+        context_section = f"""INFORMACION DE LOS DOCUMENTOS EMPRESARIALES: {docs_text}
+        INSTRUCCIÓN: Basa tu respuesta principalmente en estos documentos.
+        Si la información no está aquí, dilo claramente.
+        """
+
+    else:
+        context_section = "No se encontraron documentos relevantes. Responde con conocimiento general"
+
+    history_text = ""
+    if state.get("messages"):
+        previous_msgs = state["messages"][:-1]
+        recent_msgs = previous_msgs[-6:] if len(
+            previous_msgs) > 6 else previous_msgs
+        if recent_msgs:
+            history_text = "\n".join([
+                f"{'Usuario' if message.type == 'human' else 'Asistente'}: {message.content[:200]}"
+                for message in recent_msgs
+                if hasattr(message, 'content') and message.content
+            ])
+
+    prompt = f"""Eres un asistente de conocimiento empresarial experto.
+{context_section}
+HISTORIAL RECIENTE:
+{history_text if history_text else 'Inicio de conversación'}
+PREGUNTA: {state['question']}
+INSTRUCCIONES:
+- Si tienes documentos, úsalos como fuente principal
+- Cita los documentos cuando sea relevante
+- Si algo no está en los documentos, dilo honestamente
+- Usa el historial solo para referencias contextuales
+- Responde en español de forma clara y profesional"""
+
+    result = llm.invoke([HumanMessage(content=prompt)])
+
+    used_docs = "Con documentos" if state.get(
+        "retrieved_docs") else "Sin documentos"
+
+    print(f" [generate] {used_docs} ({len(result.content)} chars)")
+
+    return {
+        "response": result.content,
+        "messages": [AIMessage(content=result.content)]
     }
