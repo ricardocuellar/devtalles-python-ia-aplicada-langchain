@@ -206,3 +206,35 @@ def run_chat(
             print()
 
             final_state = agent.invoke(initial_state)
+
+            response = final_state["response"]
+
+            user_retrieval = bool(final_state.get("retrieved_docs"))
+
+            if user_retrieval:
+                print(f"IA [busco en documentos]: {response}")
+            else:
+                print(f"IA [respondió directo]: {response}")
+
+            sources = final_state.get("sources", [])
+
+            if sources:
+                print("\n Fuentes consultadas")
+                shown = set()
+                for source in sources:
+                    key = f"{source['file']}_p{source['page']}"
+                    if key not in shown:
+                        print(f"{source['file']} (pág. {source['page']})")
+                        shown.add(key)
+
+            print()
+
+            save_messages(backend, session_id, user_input, response)
+
+        except KeyboardInterrupt:
+            print("\nHasta luego\n")
+            print("ID de sesión: {session_id}")
+            break
+
+        except Exception as e:
+            print(f"\nError: {e}\n")
