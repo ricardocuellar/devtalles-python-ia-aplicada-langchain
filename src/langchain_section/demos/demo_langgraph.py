@@ -1,6 +1,10 @@
 
 from pathlib import Path
+from shutil import ExecError
 
+from langchain_section.memory.base import BaseMemoryBackend
+from langchain_section.memory.postgresql_memory import PostgreSQLMemoryBackend
+from langchain_section.memory.sqlite_memory import SQLiteMemoryBackend
 from src.langchain_section.core.document_loader import load_directory, split_documents
 from src.langchain_section.core.embeddings import get_or_create_vectorstore
 
@@ -34,3 +38,16 @@ def setup_vectorstore():
 
     print(f"{len(chunks)} chunks indexados")
     return vectorstore
+
+
+def setup_memory_backend() -> BaseMemoryBackend:
+    """Intentar conectar a PostgreSQL o en su defecto usar SQLite"""
+    try:
+        backend = PostgreSQLMemoryBackend()
+        backend.list_sessions()
+        print("Memoria: PostgreSQL")
+        return backend
+    except Exception as e:
+        print(f"❌ PostgreSQL no disponible {e}")
+        print(" Usando SQLite como fallback de desarrollo")
+        return SQLiteMemoryBackend()
