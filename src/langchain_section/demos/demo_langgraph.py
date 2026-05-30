@@ -114,3 +114,9 @@ def select_session(backend: BaseMemoryBackend) -> str:
         session_id = str(uuid.uuid4())
         print(f"\nPrimera sesión: {session_id}")
         return session_id
+
+
+def load_history(backend: BaseMemoryBackend, session_id: str) -> list:
+    """Carga mensajes previos"""
+    history = backend.get_history(session_id)
+    return list(history.messages)
