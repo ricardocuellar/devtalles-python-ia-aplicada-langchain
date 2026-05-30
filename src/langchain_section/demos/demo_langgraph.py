@@ -131,3 +131,60 @@ def save_messages(
     history = backend.get_history(session_id)
     history.add_user_message(human_message)
     history.add_ai_message(ai_message)
+
+
+def run_chat(
+    agent,
+    backend: BaseMemoryBackend,
+    session_id: str
+) -> None:
+
+    history = load_history(backend, session_id)
+
+    print(f"\n{'=' * 55}")
+    print("Asistente de Conocimiento Empresarial")
+    print(f"Sesión: {session_id}")
+    print(f"{'=' * 55}")
+    print("Comandos: 'sesion' | 'historial' | 'limpiar' | 'salir'")
+    print("-" * 55)
+    print()
+
+    while True:
+        try:
+            user_input = input("Tú: ").strip()
+
+            if not user_input:
+                continue
+
+            if user_input.lower == "salir":
+                messages = backend.get_history(session_id).messages
+                print(f"\nSesión guardada: {session_id}")
+                print(
+                    f"{len(messages)} mensajes en {'PostgreSQL' if isinstance(backend, PostgreSQLMemoryBackend) else 'SQLite'}")
+                break
+
+            if user_input.lower == "sesion":
+                print(f"\n ID de la sesión actual: {session_id}")
+                messages = backend.get_history(session_id).messages
+                print(f"Mensajes en esta sesión: {len(messages)}\n")
+                continue
+
+            if user_input.lower == "historial":
+                messages = backend.get_history(session_id).messages
+
+                if not messages:
+                    print("[Historial vacío]\n")
+                    continue
+
+                print("\núltimos mensajes de la sesión: ")
+                for messages in messages[-6:]:
+                    rol = "Tú" if messages.type == "human" else "IA"
+                    print(f"{rol}: {messages[:90]}...")
+                print()
+                continue
+
+            if user_input.lower == "limpiar":
+                backend.clear_history(session_id)
+                history = []
+                print("Historial de esta sesión borrada. \n")
+                continue
