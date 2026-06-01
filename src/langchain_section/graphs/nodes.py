@@ -147,6 +147,6 @@ INSTRUCCIONES:
 
 def decide_retrieval_path(state: RAGAgentState) -> Literal["retrieve", "generate"]:
     """Función de decisión"""
-    if state.get("need_retrieval", True):
+    if state.get("needs_retrieval", True):
         return "retrieve"
     return "generate"

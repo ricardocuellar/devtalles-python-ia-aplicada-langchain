@@ -10,5 +10,5 @@ class RAGAgentState(TypedDict):
     question: str
     retrieved_docs: list[str]
     response: str
-    need_retrieval: bool
+    needs_retrieval: bool
     sources: list[dict]

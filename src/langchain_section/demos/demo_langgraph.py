@@ -5,11 +5,9 @@ from pathlib import Path
 import uuid
 
 from langchain.messages import HumanMessage
-from langchain_core import vectorstores
-from requests import session
 
-from langchain_section.graphs.rag_agent import build_rag_agent
-from langchain_section.graphs.states import RAGAgentState
+from src.langchain_section.graphs.rag_agent import build_rag_agent
+from src.langchain_section.graphs.states import RAGAgentState
 from src.langchain_section.memory.base import BaseMemoryBackend
 from src.langchain_section.memory.postgresql_memory import PostgreSQLMemoryBackend
 from src.langchain_section.memory.sqlite_memory import SQLiteMemoryBackend
@@ -162,20 +160,20 @@ def run_chat(
             if not user_input:
                 continue
 
-            if user_input.lower == "salir":
+            if user_input.lower() == "salir":
                 messages = backend.get_history(session_id).messages
                 print(f"\nSesión guardada: {session_id}")
                 print(
                     f"{len(messages)} mensajes en {'PostgreSQL' if isinstance(backend, PostgreSQLMemoryBackend) else 'SQLite'}")
                 break
 
-            if user_input.lower == "sesion":
+            if user_input.lower() == "sesion":
                 print(f"\n ID de la sesión actual: {session_id}")
                 messages = backend.get_history(session_id).messages
                 print(f"Mensajes en esta sesión: {len(messages)}\n")
                 continue
 
-            if user_input.lower == "historial":
+            if user_input.lower() == "historial":
                 messages = backend.get_history(session_id).messages
 
                 if not messages:
@@ -185,11 +183,11 @@ def run_chat(
                 print("\núltimos mensajes de la sesión: ")
                 for messages in messages[-6:]:
                     rol = "Tú" if messages.type == "human" else "IA"
-                    print(f"{rol}: {messages[:90]}...")
+                    print(f"{rol}: {messages.content[:90]}...")
                 print()
                 continue
 
-            if user_input.lower == "limpiar":
+            if user_input.lower() == "limpiar":
                 backend.clear_history(session_id)
                 history = []
                 print("Historial de esta sesión borrada. \n")
@@ -202,7 +200,7 @@ def run_chat(
                 "question": user_input,
                 "retrieved_docs": [],
                 "response": "",
-                "need_retrieval": True,
+                "needs_retrieval": True,
                 "sources": [],
             }
 
@@ -236,7 +234,7 @@ def run_chat(
 
         except KeyboardInterrupt:
             print("\nHasta luego\n")
-            print("ID de sesión: {session_id}")
+            print(f"ID de sesión: {session_id}")
             break
 
         except Exception as e:
